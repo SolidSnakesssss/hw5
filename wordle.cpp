@@ -27,7 +27,7 @@ std::set<std::string> wordle(
     for(size_t i = 0; i < wordLength; i++){
         if(floatTemp == floating.length()){
             break;
-        }
+        } //Yorp
 
         else if(temp[i] == '-'){
             temp[i] = floating[floatTemp++];
