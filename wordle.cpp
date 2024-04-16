@@ -11,6 +11,7 @@ using namespace std;
 
 // Add prototypes of helper functions here
 void generatePermutations(const std::string& in, set<string>& permutations, string temp, int start, int end);
+bool validPermutation(const std::string& in, string current, size_t wordLength, size_t index = 0);
 void generateWords(const std::set<std::string>& dict, set<string>& actualWords, string current, int start, int end);
 // Definition of primary wordle function
 std::set<std::string> wordle(
@@ -44,10 +45,10 @@ std::set<std::string> wordle(
 
 void generatePermutations(const std::string& in, set<string>& permutations, string temp, int start, int end){
    if(start == end){
-        for(size_t i = 0; i < in.length(); i++){
-            if(in[i] != '-' && temp[i] != in[i]) return;
+        if(validPermutation(in, temp, in.length())){
+            permutations.insert(temp);
         }
-        permutations.insert(temp);
+        
         return;
     }
 
@@ -60,11 +61,30 @@ void generatePermutations(const std::string& in, set<string>& permutations, stri
     }
 }
 
+//Helper function for checking if the permutation is valid
+bool validPermutation(const std::string& in, string current, size_t wordLength, size_t index){
+    
+		//Returns true if in chars are in the right place
+		if(index == wordLength){
+        return true;
+    }
+
+		//Returns false if in chars are in the right place
+    else if(in[index] != '-' && current[index] != in[index]){
+        return false;
+    }
+
+    return validPermutation(in, current, wordLength, index + 1);
+}
+
 void generateWords(const std::set<std::string>& dict, set<string>& actualWords, string current, int start, int end){
     if (start == end) {
+        
+				//Best Version but requires find
         if (dict.find(current) != dict.end()) {
             actualWords.insert(current);
         }
+
         return;
     }
 
