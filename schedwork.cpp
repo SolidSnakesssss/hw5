@@ -21,66 +21,71 @@ static const Worker_T INVALID_ID = (unsigned int)-1;
 
 
 // Add prototypes for any helper functions here
-bool isValid(const std::vector<Worker_T>& daySchedule, size_t maxShifts, const std::vector<size_t>& shiftsCount);
-bool scheduleHelper(const AvailabilityMatrix& avail, size_t dailyNeed, size_t maxShifts,
-                    DailySchedule& sched, std::vector<size_t>& shiftsCount, size_t day, size_t workerIndex);
+void createSchedule(size_t currentDay, bool& actualSched, vector<int>& currentShifts, const AvailabilityMatrix& avail, const size_t d, DailySchedule& sched);
 
 // Add your implementation of schedule() and other helper functions here
 
 bool schedule(const AvailabilityMatrix& avail, const size_t dailyNeed, const size_t maxShifts, DailySchedule& sched) {
-    size_t n = avail.size();
-    size_t k = avail[0].size();
+	//Creates a vector to hold the shifts
+	vector<int> currentShifts;
+	
+	//Fill the shifts
+	for(size_t i = 0; i < avail[0].size(); i ++){
+			currentShifts.push_back(maxShifts);
+	}
 
-    // Initialize the schedule
-    sched.resize(n);
-    for (size_t i = 0; i < n; ++i) {
-        sched[i].reserve(dailyNeed);
-    }
+	for(size_t i = 0; i < avail.size(); i ++){
+			sched.push_back(vector<Worker_T>());
+	}
 
-    // Track the number of shifts for each worker
-    std::vector<size_t> shiftsCount(k, 0);
+	//Boolean to check if current schedule is valid
+	bool actualSched = false;
 
-    // Start backtracking from the first day
-    return scheduleHelper(avail, dailyNeed, maxShifts, sched, shiftsCount, 0, 0);
+	//Calls the helper function that will find a valid schedule
+	createSchedule(0, actualSched, currentShifts, avail, dailyNeed, sched);
+
+	//returns true or false depending on if an actual schedule was found
+	return actualSched;
 }
 
-bool isValid(const std::vector<Worker_T>& daySchedule, size_t maxShifts, const std::vector<size_t>& shiftsCount) {
-    for (Worker_T worker : daySchedule) {
-        if (shiftsCount[worker] >= maxShifts) {
-            return false;
-        }
-    }
-    return true;
-}
+//helper function to find a valid schedule
+void createSchedule(size_t currentDay, bool& actualSched, vector<int>& currentShifts, const AvailabilityMatrix& avail, const size_t d, DailySchedule& sched){
+	//Checks if a valid schedule has been found
+	if(actualSched)
+        return;
+		
+	//Checks the end of the available days have been reached
+	else if(currentDay == avail.size()){
+			actualSched = true;
+			return;
+	}
 
-bool scheduleHelper(const AvailabilityMatrix& avail, size_t dailyNeed, size_t maxShifts,
-                    DailySchedule& sched, std::vector<size_t>& shiftsCount, size_t day, size_t workerIndex) {
-    size_t n = avail.size();
-    size_t k = avail[0].size();
+	//checks if there size of the schedule of the current date meets the daily needs
+	else if(sched[currentDay].size() == d)
+			createSchedule(currentDay + 1, actualSched, currentShifts, avail, d, sched);
+	
+	//Fills in space with employees
+	else{
+			Worker_T start;
+			//Checks if the schedule of the current day is empty
+			if (sched[currentDay].empty()) {
+					start = 0;
+			}
+			else {
+					start = sched[currentDay].back() + 1;
+			}
 
-    // Base case: all days are scheduled
-    if (day == n) {
-        return true;
-    }
-
-    // Base case: all workers have been tried for the current day
-    if (workerIndex == k) {
-        return false;
-    }
-
-    // Try assigning current worker to the current day
-    sched[day].push_back(workerIndex);
-    shiftsCount[workerIndex]++;
-    if (isValid(sched[day], maxShifts, shiftsCount)) {
-        // If valid, proceed to the next day
-        if (scheduleHelper(avail, dailyNeed, maxShifts, sched, shiftsCount, day + 1, 0)) {
-            return true;
-        }
-    }
-    // Backtrack: remove the current worker from the current day
-    sched[day].pop_back();
-    shiftsCount[workerIndex]--;
-    
-    // Try the next worker for the current day
-    return scheduleHelper(avail, dailyNeed, maxShifts, sched, shiftsCount, day, workerIndex + 1);
+			//Fills in the schedule
+			for(Worker_T i = start; i < avail[currentDay].size(); i ++){
+					if(avail[currentDay][i] && currentShifts[i] > 0){
+							sched[currentDay].push_back(i);
+							currentShifts[i] --;
+							createSchedule(currentDay, actualSched, currentShifts, avail, d, sched);
+							if(actualSched)
+									return;
+							sched[currentDay].pop_back();
+							currentShifts[i]++;
+					}
+			}
+	}
 }
